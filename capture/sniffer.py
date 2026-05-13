@@ -1,0 +1,61 @@
+import sys
+import time
+import requests
+from scapy.all import sniff, IP, TCP, UDP, ICMP
+
+# EXPRESS JS Server Data Ingestion URL
+EXPRESS_URL = "http://localhost:5000/api/v1/packets/ingest"
+
+def packet_callback(packet):
+    try:
+        # Only process IP packets
+        if IP in packet:
+            proto = "UNKNOWN"
+            src_port = 0
+            dst_port = 0
+            flags = ""
+            
+            # Map Transport Layers
+            if TCP in packet:
+                proto = "TCP"
+                src_port = packet[TCP].sport
+                dst_port = packet[TCP].dport
+                flags = str(packet[TCP].flags)
+            elif UDP in packet:
+                proto = "UDP"
+                src_port = packet[UDP].sport
+                dst_port = packet[UDP].dport
+            elif ICMP in packet:
+                proto = "ICMP"
+
+            # Construct the exact Feature Vector expected by Express & ML Engine
+            payload = {
+                "sourceIp": packet[IP].src,
+                "destIp": packet[IP].dst,
+                "sourcePort": src_port,
+                "destPort": dst_port,
+                "protocol": proto,
+                "size": len(packet),
+                "ttl": packet[IP].ttl,
+                "flags": flags
+            }
+            
+            # Send payload into the Express JS pipeline
+            requests.post(EXPRESS_URL, json=payload)
+            print(f"Captured & Routed -> {proto} {payload['sourceIp']}:{src_port} -> {payload['destIp']}:{dst_port} | Size: {payload['size']} | TTL: {payload['ttl']}")
+
+    except Exception as e:
+        print(f"Error processing packet: {e}")
+
+def start_sniffing(interface=None):
+    print("=====================================================")
+    print(f" SENTINEL LIVE CAPTURE ENGAGED ")
+    print(f" Interface: {interface if interface else 'Default Default Route'}")
+    print("=====================================================")
+    print("Ctrl+C to stop.\n")
+    # Sniff network interface iteratively. Store=False prevents RAM blowing up.
+    sniff(prn=packet_callback, store=False, iface=interface)
+
+if __name__ == "__main__":
+    iface = sys.argv[1] if len(sys.argv) > 1 else None
+    start_sniffing(iface)
