@@ -48,11 +48,11 @@ const LiveDashboard = () => {
     };
   }, [dispatch]);
 
-  const attackData = [
+  const attackData = React.useMemo(() => [
     { name: 'Critical', count: stats.critical, fill: '#a855f7' },
     { name: 'High', count: stats.high, fill: '#ef4444' },
     { name: 'Med', count: stats.medium, fill: '#f97316' },
-  ];
+  ], [stats.critical, stats.high, stats.medium]);
 
   return (
     <div className="space-y-6">
@@ -91,10 +91,10 @@ const LiveDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {livePackets.map((packet) => {
+                {livePackets.map((packet, index) => {
                   const severity = getSeverityDetails(packet.adversityScore);
                   return (
-                    <tr key={packet._id} className="hover:bg-slate-700/30 transition-colors">
+                    <tr key={packet._id || `${packet.timestamp}-${index}`} className="hover:bg-slate-700/30 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">{formatDistanceToNow(new Date(packet.timestamp))}</td>
                       <td className="px-4 py-3 font-mono">{packet.sourceIp}</td>
                       <td className="px-4 py-3 font-mono">{packet.destIp}</td>

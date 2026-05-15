@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
   logger.info(`Client connected: ${socket.id}`);
   
   // Start feeding packets through ML Engine when client is connected
-  startSimulation(io);
+  // startSimulation(io);
 
   socket.on('disconnect', () => {
     logger.info(`Client disconnected: ${socket.id}`);
