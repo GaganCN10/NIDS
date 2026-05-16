@@ -3,16 +3,6 @@ import time
 import requests
 from scapy.all import sniff, IP, TCP, UDP, ICMP, conf
 
-# Fallback for Windows without Npcap
-conf.use_pcap = False
-try:
-    import platform
-    if "Windows" in platform.system():
-        from scapy.arch.windows import L3WinSocket
-        conf.L3socket = L3WinSocket
-except Exception:
-    pass
-
 # EXPRESS JS Server Data Ingestion URL
 EXPRESS_URL = "http://localhost:5000/api/v1/packets/ingest"
 
